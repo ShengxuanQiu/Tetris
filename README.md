@@ -4,13 +4,18 @@
 
 Shengxuan Qiu, Haochen Huang, Tenghao Zhao, and Meng Li · **HPCA 2027**
 
-Tetris is a GPU–PIM architecture for composable test-time scaling. This repository contains its trace-driven simulator, HBM3-PIM extensions for Ramulator2, workload trace inputs, and controller RTL. The simulator replays recorded action boundaries and models adaptive GPU/PIM mapping (T1), local KV lifecycle management (T2), and speculative preparation of controller state (T3).
+Tetris is a GPU–PIM architecture for composable test-time scaling. This repository contains its trace-driven simulator, HBM3-PIM extensions for Ramulator2, workload trace inputs, and controller RTL. The simulator replays action boundaries from input traces and models adaptive GPU/PIM mapping (T1), local KV lifecycle management (T2), and speculative preparation of controller state (T3).
 
 ![Tetris architecture and the three techniques](docs/figures/architecture.png)
 
 ## Run the simulator
 
-Use Ubuntu or WSL with Python 3.10–3.12, a C++ compiler, CMake, Git, and patch. Run the commands from the repository root.
+Use Ubuntu or WSL with Python 3.10–3.12, a C++ compiler, CMake, Git, and patch. Clone the repository and enter its root.
+
+```bash
+git clone --branch main https://github.com/ShengxuanQiu/Tetris.git
+cd Tetris
+```
 
 ```bash
 sudo apt-get install -y python3-venv build-essential cmake git patch
@@ -31,7 +36,18 @@ python -m scripts.replay \
 
 This compares AttAcc, ORCHES-A, ORCHES-AB, and Full Tetris on the same trace. ORCHES-A updates placement at branch rounds and ORCHES-AB updates at action boundaries with the same software KV policy. Each scans β over 0.1, 0.3, 0.5, 0.7, and 0.9 and selects the lowest-latency point. The JSON reports latency components, the β scan, and paired speedup over ORCHES-AB. Add `--steps` for a boundary breakdown, `--ablation` for standalone and leave-one-out T1–T3 comparisons, or `--orin-ms <latency>` to normalize to a measured Orin reference for the same workload.
 
-For a quick check, add `--analytical` and use a separate output path. This selects the analytical PIM service model and can run before building Ramulator2. The default selects tiled command replay for PIM attention and caches service times on the local machine.
+The default selects tiled command replay for PIM attention and caches service times on the local machine. The bundled Qwen3 W16 input is a deterministic example for exercising the replay workflow.
+
+For a quick check after installing the Python dependencies, run the analytical PIM model.
+
+```bash
+python -m scripts.replay \
+  --trace inputs/qwen3_16.json \
+  --model model_config/qwen3.json \
+  --analytical --ablation --steps --output runs/smoke-w16.json
+```
+
+The output should report 32 boundaries per policy, five candidate β values for each ORCHES baseline, and a `speedup_over_orches_ab` of approximately 1.007 for this example. Use a new output path for subsequent runs.
 
 ## Simulator configuration
 
@@ -73,15 +89,3 @@ vivado -mode batch -source rtl/vivado_rtl_sanity.tcl
 ```
 
 Tetris builds on the [AttAcc simulator](https://github.com/scale-snu/attacc_simulator) and [Ramulator2](https://github.com/CMU-SAFARI/ramulator2). See [LICENSE](LICENSE) for the inherited license.
-
-## Citation
-
-```bibtex
-@inproceedings{qiu2027tetris,
-  title     = {{Tetris}: Accelerating Composable Test-Time Scaling on {GPU-PIM}
-               Systems via Adaptive Mapping, Control, and Memory Management},
-  author    = {Qiu, Shengxuan and Huang, Haochen and Zhao, Tenghao and Li, Meng},
-  booktitle = {IEEE International Symposium on High-Performance Computer Architecture},
-  year      = {2027}
-}
-```
