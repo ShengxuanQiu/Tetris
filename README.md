@@ -47,8 +47,6 @@ python -m scripts.replay \
   --analytical --ablation --steps --output runs/smoke-w16.json
 ```
 
-The output should report 32 boundaries per policy, five candidate β values for each ORCHES baseline, and a `speedup_over_orches_ab` of approximately 1.007 for this example. Use a new output path for subsequent runs.
-
 ## Simulator configuration
 
 | Resource | Evaluation configuration |
